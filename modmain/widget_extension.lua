@@ -88,7 +88,8 @@ AddClassPostConstruct("widgets/widget", function(self)
     end
   end
 
-  -- keep_on_hover: 鼠标进入提示的子控件后保留；exclusive_group: 同组图标切换时立即关闭旧提示。
+  -- keep_on_hover: 鼠标进入提示的子控件后保留，未指定父节点时自动挂到来源所属屏幕。
+  -- exclusive_group: 同组图标切换时立即关闭旧提示。
   function self:SetHoverWidget(widgetOrFn, params)
     if widgetOrFn == nil then
       self:ClearHoverWidget()
@@ -103,8 +104,10 @@ AddClassPostConstruct("widgets/widget", function(self)
       self.hoverwidget_root = params.attach_to_parent:AddChild(Widget("hoverwidget_root"))
     else
       self.hoverwidget_root = Widget("hoverwidget_root")
-      self.hoverwidget_root.global_widget = true
-      self.hoverwidget_root:SetScaleMode(SCALEMODE_PROPORTIONAL)
+      if not params.keep_on_hover then
+        self.hoverwidget_root.global_widget = true
+        self.hoverwidget_root:SetScaleMode(SCALEMODE_PROPORTIONAL)
+      end
     end
     self.hoverwidget_root:Hide()
 
@@ -140,14 +143,29 @@ AddClassPostConstruct("widgets/widget", function(self)
         return
       end
 
+      local attach_to_parent = params.attach_to_parent
+      if attach_to_parent == nil and params.keep_on_hover then
+        -- 构造控件时可能尚未挂到屏幕，等显示时再解析，保证焦点在同一棵树中传播。
+        attach_to_parent = owner
+        while attach_to_parent ~= nil and not attach_to_parent.is_screen do
+          attach_to_parent = attach_to_parent.parent
+        end
+        if attach_to_parent == nil then
+          return
+        end
+        if owner.hoverwidget_root.parent ~= attach_to_parent then
+          attach_to_parent:AddChild(owner.hoverwidget_root)
+        end
+      end
+
       local hover_widget = ensure_hover_widget(owner)
       if hover_widget == nil then
         return
       end
 
-      if params.attach_to_parent ~= nil then
-        local world_pos = owner:GetWorldPosition() - params.attach_to_parent:GetWorldPosition()
-        local parent_scale = params.attach_to_parent:GetScale()
+      if attach_to_parent ~= nil then
+        local world_pos = owner:GetWorldPosition() - attach_to_parent:GetWorldPosition()
+        local parent_scale = attach_to_parent:GetScale()
 
         local x_pos = world_pos.x / parent_scale.x + (params.offset_x or 0)
         local y_pos = world_pos.y / parent_scale.y + (params.offset_y or 26)
