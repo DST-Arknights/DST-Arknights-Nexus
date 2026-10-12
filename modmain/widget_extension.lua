@@ -24,6 +24,7 @@ AddClassPostConstruct("widgets/widget", function(self)
   end
 
   function self:ClearHoverWidget()
+    self._HoverWidgetClosing = true
     if self._HoverWidgetShowTask then
       self._HoverWidgetShowTask:Cancel()
       self._HoverWidgetShowTask = nil
@@ -33,8 +34,17 @@ AddClassPostConstruct("widgets/widget", function(self)
       self._HoverWidgetHideTask = nil
     end
 
+    if self._HoverWidgetGroup ~= nil and self._HoverWidgetGroup.owner == self then
+      self._HoverWidgetGroup.owner = nil
+    end
+    self._HoverWidgetGroup = nil
+    self._HoverWidgetHideNow = nil
+    self._HoverWidgetSourceFocused = nil
+
     if self.hoverwidget_focus_proxy then
-      self.hoverwidget_focus_proxy:Kill()
+      if self.hoverwidget_focus_proxy.inst:IsValid() then
+        self.hoverwidget_focus_proxy:Kill()
+      end
       self.hoverwidget_focus_proxy = nil
     end
 
@@ -51,7 +61,9 @@ AddClassPostConstruct("widgets/widget", function(self)
     self._PrevOnLoseFocusForHoverWidget = nil
 
     if self.hoverwidget then
-      self.hoverwidget:Hide()
+      if self.hoverwidget.inst:IsValid() then
+        self.hoverwidget:Hide()
+      end
       self.hoverwidget = nil
     end
 
@@ -59,12 +71,24 @@ AddClassPostConstruct("widgets/widget", function(self)
     self._HoverWidgetSourceIsFn = nil
 
     if self.hoverwidget_root then
-      self.hoverwidget_root:Hide()
-      self.hoverwidget_root:Kill()
+      if self.hoverwidget_root.inst:IsValid() then
+        self.hoverwidget_root:Hide()
+        self.hoverwidget_root:ClearFocus()
+        self.hoverwidget_root:Kill()
+      end
       self.hoverwidget_root = nil
+    end
+    self._HoverWidgetClosing = nil
+  end
+
+  -- 关闭当前提示并取消延时任务，保留来源与焦点绑定供下次悬停使用。
+  function self:HideHoverWidget()
+    if self._HoverWidgetHideNow ~= nil then
+      self._HoverWidgetHideNow(self)
     end
   end
 
+  -- keep_on_hover: 鼠标进入提示的子控件后保留；exclusive_group: 同组图标切换时立即关闭旧提示。
   function self:SetHoverWidget(widgetOrFn, params)
     if widgetOrFn == nil then
       self:ClearHoverWidget()
@@ -86,6 +110,7 @@ AddClassPostConstruct("widgets/widget", function(self)
 
     self._HoverWidgetSource = widgetOrFn
     self._HoverWidgetSourceIsFn = type(widgetOrFn) == "function"
+    self._HoverWidgetGroup = params.exclusive_group
 
     if not self._HoverWidgetSourceIsFn then
       self.hoverwidget = self.hoverwidget_root:AddChild(widgetOrFn)
@@ -98,7 +123,7 @@ AddClassPostConstruct("widgets/widget", function(self)
       if owner.hoverwidget ~= nil then
         return owner.hoverwidget
       end
-      if owner.hoverwidget_root == nil then
+      if owner.hoverwidget_root == nil or not owner.hoverwidget_root.inst:IsValid() then
         return nil
       end
       local hover_widget = FunctionOrValue(owner._HoverWidgetSource, owner)
@@ -111,7 +136,7 @@ AddClassPostConstruct("widgets/widget", function(self)
     end
 
     local show_hover_widget = function(owner)
-      if owner.hoverwidget_root == nil then
+      if owner.hoverwidget_root == nil or not owner.hoverwidget_root.inst:IsValid() then
         return
       end
 
@@ -140,18 +165,48 @@ AddClassPostConstruct("widgets/widget", function(self)
     end
 
     local hide_hover_widget = function(owner)
-      if owner.hoverwidget then
-        if owner._HoverWidgetSourceIsFn then
-          owner.hoverwidget:Kill()
-          owner.hoverwidget = nil
+      if owner._HoverWidgetClosing then
+        return
+      end
+      owner._HoverWidgetClosing = true
+      if owner._HoverWidgetShowTask then
+        owner._HoverWidgetShowTask:Cancel()
+        owner._HoverWidgetShowTask = nil
+      end
+      if owner._HoverWidgetHideTask then
+        owner._HoverWidgetHideTask:Cancel()
+        owner._HoverWidgetHideTask = nil
+      end
+      if owner._HoverWidgetGroup ~= nil and owner._HoverWidgetGroup.owner == owner then
+        owner._HoverWidgetGroup.owner = nil
+      end
+      local hover_widget = owner.hoverwidget
+      local destroy_widget = owner._HoverWidgetSourceIsFn
+      if destroy_widget then
+        owner.hoverwidget = nil
+      end
+      if hover_widget and hover_widget.inst:IsValid() then
+        hover_widget:Hide()
+      end
+      if owner.hoverwidget_root and owner.hoverwidget_root.inst:IsValid() then
+        owner.hoverwidget_root:Hide()
+        owner.hoverwidget_root:ClearFocus()
+      end
+      if hover_widget and hover_widget.inst:IsValid() and destroy_widget then
+        if params.keep_on_hover or params.exclusive_group ~= nil then
+          -- 新图标获得焦点时先关闭旧面板，等焦点传播结束后再移除子节点。
+          hover_widget.inst:DoTaskInTime(0, function()
+            if hover_widget.inst:IsValid() then
+              hover_widget:Kill()
+            end
+          end)
         else
-          owner.hoverwidget:Hide()
+          hover_widget:Kill()
         end
       end
-      if owner.hoverwidget_root then
-        owner.hoverwidget_root:Hide()
-      end
+      owner._HoverWidgetClosing = nil
     end
+    self._HoverWidgetHideNow = hide_hover_widget
 
     local show_delay = params.show_delay
       or params.delay_show
@@ -161,6 +216,14 @@ AddClassPostConstruct("widgets/widget", function(self)
       or 0
 
     local request_show_hover_widget = function(owner)
+      owner._HoverWidgetSourceFocused = true
+      if params.exclusive_group ~= nil then
+        local previous = params.exclusive_group.owner
+        if previous ~= nil and previous ~= owner then
+          previous:HideHoverWidget()
+        end
+        params.exclusive_group.owner = owner
+      end
       if owner._HoverWidgetHideTask then
         owner._HoverWidgetHideTask:Cancel()
         owner._HoverWidgetHideTask = nil
@@ -182,6 +245,13 @@ AddClassPostConstruct("widgets/widget", function(self)
     end
 
     local request_hide_hover_widget = function(owner)
+      if owner._HoverWidgetClosing then
+        return
+      end
+      if params.keep_on_hover and (owner._HoverWidgetSourceFocused
+        or owner.hoverwidget_root ~= nil and owner.hoverwidget_root.focus) then
+        return
+      end
       if owner._HoverWidgetShowTask then
         owner._HoverWidgetShowTask:Cancel()
         owner._HoverWidgetShowTask = nil
@@ -192,6 +262,14 @@ AddClassPostConstruct("widgets/widget", function(self)
         owner._HoverWidgetHideTask = nil
       end
 
+      if owner.hoverwidget_root == nil or not owner.hoverwidget_root.inst:IsValid()
+        or not owner.hoverwidget_root.shown then
+        if owner._HoverWidgetGroup ~= nil and owner._HoverWidgetGroup.owner == owner then
+          owner._HoverWidgetGroup.owner = nil
+        end
+        return
+      end
+
       if hide_delay > 0 then
         owner._HoverWidgetHideTask = owner.inst:DoTaskInTime(hide_delay, function()
           owner._HoverWidgetHideTask = nil
@@ -200,6 +278,18 @@ AddClassPostConstruct("widgets/widget", function(self)
       else
         hide_hover_widget(owner)
       end
+    end
+
+    if params.keep_on_hover then
+      self.hoverwidget_root:SetOnGainFocus(function()
+        if self._HoverWidgetHideTask then
+          self._HoverWidgetHideTask:Cancel()
+          self._HoverWidgetHideTask = nil
+        end
+      end)
+      self.hoverwidget_root:SetOnLoseFocus(function()
+        request_hide_hover_widget(self)
+      end)
     end
 
     self._PrevOnGainFocusForHoverWidget = self.OnGainFocus
@@ -214,6 +304,7 @@ AddClassPostConstruct("widgets/widget", function(self)
         request_show_hover_widget(self)
       end
       self.hoverwidget_focus_proxy.OnLoseFocus = function()
+        self._HoverWidgetSourceFocused = false
         request_hide_hover_widget(self)
       end
     else
@@ -224,6 +315,7 @@ AddClassPostConstruct("widgets/widget", function(self)
         end
       end
       self._HoverWidgetOnLoseFocus = function(owner)
+        owner._HoverWidgetSourceFocused = false
         request_hide_hover_widget(owner)
         if owner._PrevOnLoseFocusForHoverWidget then
           owner._PrevOnLoseFocusForHoverWidget(owner)
