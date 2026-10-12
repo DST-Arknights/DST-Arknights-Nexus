@@ -204,7 +204,7 @@ function ArkSkillDesc:RefreshConfig(descConfig)
   topOffset = topOffset - levelTextSizeY
 
   if descConfig.activationMode == CONSTANTS.ACTIVATION_MODE.MANUAL then
-    local rightEdge = self.size[1] / 2 - 4
+    local rightEdge = self.size[1] / 2 - PADDING
     local gap = 8
     local btnGap = 2
 
