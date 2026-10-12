@@ -35,7 +35,7 @@ pwsh ./tools/publish.ps1 -DistOnly
 
 其他 mod 目录中的 `tools/publish.ps1` 只是转发代理，并在脚本内嵌入该项目的差异化配置。新增公共参数时只需修改本项目的统一入口。
 
-**物品包的 Steam 介绍文档：**直接编辑 `docs/workshop_description_zh-steam.txt` 和 `docs/workshop_description_en-steam.txt`，使用 Steam BBCode，并同步更新中英文。这两份文件是工坊介绍的唯一来源，不再维护对应 Markdown。本项目没有配置 Markdown 转换，发布时会保留手工排版。
+**源枢的 Steam 介绍文档：**直接编辑 `docs/workshop_description_zh-steam.txt` 和 `docs/workshop_description_en-steam.txt`，使用 Steam BBCode，并同步更新中英文。这两份文件是工坊介绍的唯一来源，不再维护对应 Markdown。本项目没有配置 Markdown 转换，发布时会保留手工排版。
 
 统一发布工具仍支持其他项目通过 `SteamDescriptionMarkdown` 和 `SteamDescriptionOutput` 配置可选转换。两组使用相对路径数组，按顺序一一对应；使用转换的项目应将源文件和输出文件列入自己的 `GitFiles`。
 
@@ -45,7 +45,7 @@ pwsh ./tools/publish.ps1 -DistOnly
 3. AI：通过 OpenAI 兼容 HTTP API 总结 git 提交   ← 配置检查通过后才请求
 4. 验证 changelog 条目存在且有内容
 5. 运行项目特定的前置钩子（生成物品表等）
-5.5 将配置的项目 Markdown 介绍逐份转换为 Steam BBCode 文本（可选，物品包不使用）
+5.5 将配置的项目 Markdown 介绍逐份转换为 Steam BBCode 文本（可选，源枢不使用）
 6. 更新 modinfo.lua 版本号
 7. 从 CHANGELOG.md 读取更新内容，写入 description
 8. Git 提交（`release: x.y.z`）并打 tag        ← 源代码保持本地依赖

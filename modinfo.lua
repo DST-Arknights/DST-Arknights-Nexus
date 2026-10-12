@@ -5,8 +5,8 @@ local function T(tbl)
 end
 
 name = T({
-    en = "Arknights Item Package",
-    zh = "明日方舟 物品包"
+    en = "Arknights: Nexus",
+    zh = "源枢"
 })
 version = "2.10.1"
 
@@ -36,23 +36,23 @@ v2.10.0 (2026-10-08)
 ]]
 
 description = T({
-    en = [[An Arknights-themed expansion and shared framework for Don't Starve Together.
+    en = [[Arknights: Nexus is an Arknights-themed expansion and shared framework for Don't Starve Together.
 Includes materials, currencies, crafting stations, elite progression, skills, talents, buff icons, and emoticons.
 
 Current version: ]] .. version .. "\n" .. UPDATE_EN .. [[
 
 Issues & Suggestions Feedback Channels:
-Issues: https://github.com/DST-Arknights/DST-ArknightsItemPackage/issues
+Issues: https://github.com/DST-Arknights/DST-Arknights-Nexus/issues
 Email: tohsakakuro@outlook.com
 QQ Group: 666511586
 ]],
-    zh = [[这是一个饥荒联机版的明日方舟主题扩展与通用前置模组。
+    zh = [[「源枢」是饥荒联机版的明日方舟主题扩展，为系列角色模组提供通用基础机制，并扩展装备与玩法。
 包含材料掉落、货币、加工站与训练站、精英化养成、技能、天赋、Buff图标和表情等内容。
 
 当前版本: ]] .. version .. "\n" .. UPDATE_ZH .. [[
 
 需求与建议反馈渠道:
-Issues: https://github.com/DST-Arknights/DST-ArknightsItemPackage/issues
+Issues: https://github.com/DST-Arknights/DST-Arknights-Nexus/issues
 Email: tohsakakuro@outlook.com
 QQ群: 666511586
 
@@ -74,7 +74,7 @@ icon = "modicon.tex"
 
 priority = 1
 
-server_filter_tags = {"arknights", "明日方舟", "item", "物品"}
+server_filter_tags = {"arknights", "明日方舟", "nexus", "源枢", "item", "物品"}
 
 local function Title(opt)
     opt.options = {{ description = "", data = 0 }}

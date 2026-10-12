@@ -1,6 +1,6 @@
 # 统一发布入口（所有 DST-Arknights mod 项目共用）
 #
-# 物品包项目可直接运行；其他 mod 通过各自的薄代理调用本入口。
+# 源枢项目可直接运行；其他 mod 通过各自的薄代理调用本入口。
 #
 # 用法:
 #   pwsh ./tools/publish.ps1 -Bump patch
@@ -49,7 +49,7 @@ $ErrorActionPreference = 'Stop'
 try { [Console]::InputEncoding = [System.Text.Encoding]::UTF8 } catch { }
 $OutputEncoding = [System.Text.Encoding]::UTF8
 
-# 导入编排模块（始终从物品包自身的 tools/publish/ 目录加载）
+# 导入编排模块（始终从源枢自身的 tools/publish/ 目录加载）
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $publishDir = Join-Path $scriptDir 'publish'
 $modulePath = Join-Path $publishDir 'publish.psm1'
@@ -71,7 +71,7 @@ if (-not (Test-Path (Join-Path $projectRoot 'modinfo.lua'))) {
 
 Import-Module $modulePath -Force
 
-# 物品包自身的差异化配置也直接放在唯一入口中。
+# 源枢自身的差异化配置也直接放在唯一入口中。
 $packageRoot = (Resolve-Path (Join-Path $scriptDir '..')).Path
 if ($ProjectConfig.Count -eq 0 -and $projectRoot -eq $packageRoot) {
     $ProjectConfig = @{

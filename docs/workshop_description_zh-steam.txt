@@ -1,4 +1,4 @@
-本模组包含明日方舟主题装备、精英化成长与聊天表情。
+「源枢」包含明日方舟主题装备、精英化成长与聊天表情，并为系列角色模组提供通用基础机制。
 
 推荐搭配下方喜欢的角色模组一同订阅，体验更完整的角色玩法。
 
@@ -90,5 +90,5 @@
 
 遇到问题或有新的建议，欢迎通过以下方式反馈。
 
-[b]Issue:[/b] [url=https://github.com/DST-Arknights/DST-ArknightsItemPackage/issues]GitHub Issues[/url]
+[b]Issue:[/b] [url=https://github.com/DST-Arknights/DST-Arknights-Nexus/issues]GitHub Issues[/url]
 [b]邮箱:[/b] tohsakakuro@outlook.com

@@ -1,6 +1,6 @@
-This mod adds Arknights-themed equipment, Elite progression, and chat emoticons.
+Arknights: Nexus adds Arknights-themed equipment, Elite progression, and chat emoticons, and provides a shared framework for the character mods.
 
-For a fuller character experience, consider subscribing to one of the character mods below alongside this pack.
+For a fuller character experience, consider subscribing to one of the character mods below alongside this mod.
 
 [hr][/hr]
 
@@ -90,5 +90,5 @@ Click the button again to close the panel.
 
 If you encounter a problem or have a suggestion, please get in touch using either option below.
 
-[b]Issue:[/b] [url=https://github.com/DST-Arknights/DST-ArknightsItemPackage/issues]GitHub Issues[/url]
+[b]Issue:[/b] [url=https://github.com/DST-Arknights/DST-Arknights-Nexus/issues]GitHub Issues[/url]
 [b]Email:[/b] tohsakakuro@outlook.com

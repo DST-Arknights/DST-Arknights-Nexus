@@ -1,6 +1,6 @@
 # 充能站接入：ark_supply_rechargeable
 
-其他 DST 模组可在被充能实体上添加 `ark_supply_rechargeable`，接入便携式补给站。通过检查组件文件实现可选兼容，无需声明物品包依赖。
+其他 DST 模组可在被充能实体上添加 `ark_supply_rechargeable`，接入便携式补给站。通过检查组件文件实现可选兼容，无需声明源枢依赖。
 
 ## 注册与移除
 

@@ -53,7 +53,7 @@ local ArkSkill = Class(Widget, function(self, owner, config)
   manualActivationShadow:SetVRegPoint(ANCHOR_BOTTOM)
   manualActivationShadow:SetSize(self.iconSize)
   -- 设置黑色半透明
-  manualActivationShadow:SetTint(1, 1, 1, 0.42)
+  manualActivationShadow:SetTint(1, 1, 1, 0.48)
 
   local lockedShadow = skillIcon:AddChild(Image("images/ui.xml", "black.tex"))
   self.lockedShadow = lockedShadow
@@ -67,7 +67,7 @@ local ArkSkill = Class(Widget, function(self, owner, config)
   chargeShadow:SetVRegPoint(ANCHOR_BOTTOM)
   chargeShadow:SetSize(self.iconSize)
   -- 设置绿色半透明
-  chargeShadow:SetTint(0, 1, 0, 0.28)
+  chargeShadow:SetTint(0, 1, 0, 0.32)
 
   local buffShadow = skillIcon:AddChild(Image("images/ui.xml", "white.tex"))
   self.buffShadow = buffShadow
@@ -75,7 +75,7 @@ local ArkSkill = Class(Widget, function(self, owner, config)
   buffShadow:SetVRegPoint(ANCHOR_BOTTOM)
   buffShadow:SetSize(self.iconSize)
   -- 设置橘黄色半透明
-  buffShadow:SetTint(1, 0.5, 0, 0.21)
+  buffShadow:SetTint(1, 0.5, 0, 0.24)
 
   local stop = skillIcon:AddChild(Image("images/ark_skill.xml", "stop.tex"))
   self.stop = stop
