@@ -1,4 +1,10 @@
 # 版本更新记录
+## v2.11.0 (2026-10-19)
+
+- 完成 Empathy Amulet 的满共振援助能力。
+---
+- Completed the full resonance assistance ability for Empathy Amulet.
+
 ## v2.10.2 (2026-10-18)
 
 - 修复交互式悬浮提示在 keep_on_hover 开启且未指定 attach_to_parent 时鼠标离开后仍显示的问题，并自动挂载到所属屏幕。
