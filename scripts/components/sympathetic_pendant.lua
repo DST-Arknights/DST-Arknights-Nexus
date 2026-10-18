@@ -56,6 +56,10 @@ local SympatheticPendant = Class(function(self, inst)
   self.emotion = "normal"
   self.emotion_start_time = 0
   self.last_combat_time = 0
+  self.rescue_cooldown_end = 0
+  self.rescue_flashing = false
+  self.rescue_dormant = false
+  self.resonance_by_userid = {}
 
   self.scan_player_period = 1
   self.player_near_dist = 30
@@ -370,7 +374,41 @@ end
 
 function SympatheticPendant:GetSharedData(player)
   local world_data = TheWorld.components.sympathetic_pendant_data
-  return world_data and world_data:GetPairData(self.inst.GUID, player.GUID) or nil
+  if world_data == nil then return nil end
+  local data = world_data:GetPairData(self.inst.GUID, player.GUID, self.inst.userid, player.userid)
+  -- GUIDs change on reconnect/load. Retain each player's known relationships
+  -- by userid as well, including the current world's pre-existing progress.
+  local other = player.components.sympathetic_pendant
+  if self.inst.userid ~= nil and player.userid ~= nil and other ~= nil then
+    data.resonance = math.max(data.resonance, self.resonance_by_userid[player.userid] or 0,
+        other.resonance_by_userid[self.inst.userid] or 0)
+    self.resonance_by_userid[player.userid] = data.resonance
+    other.resonance_by_userid[self.inst.userid] = data.resonance
+  end
+  return data
+end
+
+function SympatheticPendant:GetRescueCooldown()
+  return math.max(0, self.rescue_cooldown_end - GetTime())
+end
+
+function SympatheticPendant:StartRescueCooldown(duration)
+  self.rescue_cooldown_end = GetTime() + duration
+  self:SetRescueFlashing(false)
+end
+
+function SympatheticPendant:SetRescueFlashing(flashing)
+  local dormant = self:GetRescueCooldown() > 0
+  if self.light ~= nil then self.light:SetRescueDormant(dormant) end
+  if self.rescue_dormant ~= dormant then
+    self.rescue_dormant = dormant
+    if self.equipped ~= nil and self.equipped.RefreshGlow ~= nil then
+      self.equipped:RefreshGlow(self.inst)
+    end
+  end
+  flashing = flashing and self.equipped ~= nil and self:GetRescueCooldown() <= 0
+  self.rescue_flashing = flashing
+  if self.light ~= nil then self.light:SetRescueFlashing(flashing) end
 end
 
 function SympatheticPendant:ScanPlayers()
@@ -449,6 +487,8 @@ function SympatheticPendant:AddLight()
     self.light:Remove()
   end
   self.light = SpawnPrefab("sympathetic_pendant_light")
+  self.light:SetRescueDormant(self:GetRescueCooldown() > 0)
+  self.light:SetPendantBuild(self.equipped:GetSkinBuild())
   self.light.entity:SetParent(self.inst.entity)
 end
 
@@ -484,9 +524,11 @@ function SympatheticPendant:EquipPendant(item)
   self:SetEmotion(emotion)
   self:AddLight()
   self:UpdateLight(emotion)
+  self:SetRescueFlashing(false)
 end
 
 function SympatheticPendant:UnequipPendant()
+  self:SetRescueFlashing(false)
   self:StopEvaluateEmotion()
   self:UnregisterCombatEvents()
   self:RemoveAllOwnerBuffs()
@@ -499,6 +541,9 @@ function SympatheticPendant:UnequipPendant()
 end
 
 function SympatheticPendant:OnRemoveEntity()
+  self:StopNearTask()
+  self:StopEvaluateEmotion()
+  self:RemoveLight()
   for _, player in ipairs(self.close_players) do
     self:RemoveAllSharedBuffs(player)
     self:RemoveFriendBuff(player)
@@ -510,10 +555,21 @@ function SympatheticPendant:OnSave()
   data.emotion = self:GetEmotion()
   data.emotion_start_time = self.emotion_start_time
   data.last_combat_time = self.last_combat_time
+  data.rescue_cooldown = self:GetRescueCooldown()
+  -- Flush the latest tick of pair growth before serializing player records.
+  for _, player in ipairs(AllPlayers) do
+    if player ~= self.inst then self:GetSharedData(player) end
+  end
+  data.resonance_by_userid = self.resonance_by_userid
   return data
 end
 
 function SympatheticPendant:OnLoad(data)
+  if data ~= nil then
+    self.rescue_cooldown_end = GetTime() + math.clamp(tonumber(data.rescue_cooldown) or 0, 0, 300)
+    self.resonance_by_userid = data.resonance_by_userid or {}
+    self:SetRescueFlashing(false)
+  end
   if data and data.emotion then
     self.emotion_start_time = data.emotion_start_time or os.time()
     self.last_combat_time = data.last_combat_time or 0

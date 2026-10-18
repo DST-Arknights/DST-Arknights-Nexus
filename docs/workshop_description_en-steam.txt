@@ -50,6 +50,10 @@ Changes color and mood in response to combat, solitude, and your companions' con
 [b]Resonance with Companions[/b]
 Shares its effects with nearby companions. When you both wear one and adventure together, resonance builds over time, strengthening the effects you share.
 
+At full resonance, while both pendants are worn, health or sanity below 20 makes the linked pendants flash in sync. Within resonance range, companions jointly share the corresponding resource, restoring up to 80 while each keeps at least 50.
+
+Flashing continues while no supply is available. Receiving aid disables this ability for 5 minutes, preventing both requests and donations; donating alone has no cooldown.
+
 [h3]Portable Supply[/h3]
 
 A portable station for recharging skills. Deploy it to quickly charge compatible skills for nearby characters, helping you prepare for battle and keep fighting.

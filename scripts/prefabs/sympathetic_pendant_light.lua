@@ -31,7 +31,7 @@ local function ApplyLightState(inst, state)
   inst.Light:SetFalloff(state.falloff)
   inst.Light:SetIntensity(state.intensity)
   inst.Light:SetColour(unpack(state.colour))
-  inst.Light:Enable(state.intensity > 0.01 or state.radius > 0.01)
+  inst.Light:Enable(not inst._rescue_dormant:value() and (state.intensity > 0.01 or state.radius > 0.01))
 end
 local function StopLightTransition(inst)
   if inst._transition_task ~= nil then
@@ -76,19 +76,110 @@ local function UpdateLight(inst, state)
     inst._transition_task = inst:DoPeriodicTask(LIGHT_TRANSITION_INTERVAL, UpdateLightTransition)
   end
 end
+
+local function HasPendant(inst, owner)
+  -- Other players' inventory_classified is private to their owning client.
+  -- Check the visible symbol instead, including the networked skin build.
+  local build = owner ~= nil and owner.AnimState:GetSymbolOverride("swap_body") or nil
+  return build ~= nil and build == inst._pendant_build:value()
+end
+
+local function SetPendantBuild(inst, build)
+  inst._pendant_build:set(hash(build ~= nil and build ~= "" and build or "torso_sympathetic_pendants"))
+end
+
+local function ResetRescueFlash(inst)
+  local owner = inst._flash_owner or inst.entity:GetParent()
+  if owner ~= nil and owner:IsValid() and HasPendant(inst, owner) then
+    if inst._rescue_dormant:value() then
+      owner.AnimState:ClearSymbolBloom("swap_body")
+      owner.AnimState:SetSymbolLightOverride("swap_body", 0)
+      owner.AnimState:SetSymbolAddColour("swap_body", 0, 0, 0, 1)
+    else
+      owner.AnimState:SetSymbolBloom("swap_body")
+      owner.AnimState:SetSymbolLightOverride("swap_body", 1)
+      owner.AnimState:SetSymbolAddColour("swap_body", 0.05, 0.05, 0.05, 0.5)
+    end
+  end
+  inst._flash_owner = nil
+end
+
+local function UpdateRescueFlash(inst)
+  local owner = inst.entity:GetParent()
+  if owner ~= inst._flash_owner then ResetRescueFlash(inst) end
+  if owner ~= nil and owner:IsValid() and HasPendant(inst, owner) then
+    inst._flash_owner = owner
+    -- All pendants use the same local clock phase, including a partner that
+    -- enters the client's view later. Only the on/off flag is a custom netvar.
+    local pulse = (1 + math.cos(GetTime() * 2 * PI / 0.8)) * 0.5
+    owner.AnimState:SetSymbolLightOverride("swap_body", 0.1 + 0.9 * pulse)
+    local glow = 0.65 * pulse
+    owner.AnimState:SetSymbolAddColour("swap_body", glow, glow, glow, pulse)
+  end
+end
+
+local function OnRescueFlashDirty(inst)
+  -- Light enablement is also replicated natively by the server. Applying the
+  -- dormancy flag locally closes the gap if its packet arrives first.
+  inst.Light:Enable(not inst._rescue_dormant:value())
+  if inst._rescue_flashing:value() and not inst._rescue_dormant:value() then
+    if inst._flash_task == nil then
+      inst._flash_task = inst:DoPeriodicTask(2 * FRAMES, UpdateRescueFlash)
+    end
+    UpdateRescueFlash(inst)
+  else
+    if inst._flash_task ~= nil then
+      inst._flash_task:Cancel()
+      inst._flash_task = nil
+    end
+    ResetRescueFlash(inst)
+  end
+end
+
+local function SetRescueDormant(inst, dormant)
+  if inst._rescue_dormant:value() ~= dormant then
+    inst._rescue_dormant:set(dormant)
+    -- Keep the ordinary light state cached while disabling its emission, so
+    -- changes of emotion/range during cooldown cannot switch it back on.
+    ApplyLightState(inst, inst.current_light or inst.target_light)
+    if not TheNet:IsDedicated() then OnRescueFlashDirty(inst) end
+  end
+end
+
+local function SetRescueFlashing(inst, flashing)
+  if inst._rescue_flashing:value() ~= flashing then
+    inst._rescue_flashing:set(flashing)
+    if not TheNet:IsDedicated() then OnRescueFlashDirty(inst) end
+  end
+end
+
 local function lightfn()
   local inst = CreateEntity()
   inst.entity:AddTransform()
   inst.entity:AddLight()
   inst.entity:AddNetwork()
 
+  inst._rescue_flashing = net_bool(inst.GUID, "sympathetic_pendant_light.rescue_flashing", "rescueflashdirty")
+  inst._rescue_dormant = net_bool(inst.GUID, "sympathetic_pendant_light.rescue_dormant", "rescueflashdirty")
+  inst._pendant_build = net_hash(inst.GUID, "sympathetic_pendant_light.pendant_build")
+  SetPendantBuild(inst)
+
   inst:AddTag("FX")
   inst:AddTag("NOCLICK")
   inst.target_light = CopyLightState(default_light)
   inst.current_light = nil
   inst.UpdateLight = UpdateLight
+  inst.SetRescueFlashing = SetRescueFlashing
+  inst.SetRescueDormant = SetRescueDormant
+  inst.SetPendantBuild = SetPendantBuild
   ApplyLightState(inst, inst.target_light)
   inst.entity:SetPristine()
+
+  if not TheNet:IsDedicated() then
+    inst:ListenForEvent("rescueflashdirty", OnRescueFlashDirty)
+    inst:ListenForEvent("onremove", ResetRescueFlash)
+    inst:DoTaskInTime(0, OnRescueFlashDirty)
+  end
 
   if not TheWorld.ismastersim then
     return inst

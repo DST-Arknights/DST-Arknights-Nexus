@@ -22,6 +22,19 @@ for _, emotion in ipairs(EMOTIONS) do
   table.insert(prefabs, GetSharedBuffPrefab(emotion))
 end
 
+local function RefreshGlow(inst, owner)
+  local pendant = owner.components.sympathetic_pendant
+  if pendant ~= nil and pendant:GetRescueCooldown() > 0 then
+    owner.AnimState:ClearSymbolBloom("swap_body")
+    owner.AnimState:SetSymbolLightOverride("swap_body", 0)
+    owner.AnimState:SetSymbolAddColour("swap_body", 0, 0, 0, 1)
+  else
+    owner.AnimState:SetSymbolBloom("swap_body")
+    owner.AnimState:SetSymbolLightOverride("swap_body", 1)
+    owner.AnimState:SetSymbolAddColour("swap_body", 0.05, 0.05, 0.05, 0.5)
+  end
+end
+
 local function SetEmotion(inst, owner, emotion)
   inst.components.inventoryitem:ChangeImageName(emotion)
   if owner then
@@ -33,9 +46,7 @@ local function SetEmotion(inst, owner, emotion)
     else
       owner.AnimState:OverrideSymbol("swap_body", "torso_sympathetic_pendants", emotion)
     end
-    owner.AnimState:SetSymbolBloom("swap_body")
-    owner.AnimState:SetSymbolLightOverride("swap_body", 1)
-    owner.AnimState:SetSymbolAddColour("swap_body", 0.05, 0.05, 0.05, 0.5)
+    RefreshGlow(inst, owner)
   end
 end
 
@@ -120,6 +131,7 @@ local function fn()
   inst:AddComponent("inventoryitem")
   inst.components.inventoryitem.atlasname = "images/inventoryimages/sympathetic_pendants.xml"
   inst.SetEmotion = SetEmotion
+  inst.RefreshGlow = RefreshGlow
   inst:SetEmotion(nil, "normal")
   inst:AddComponent("shadowlevel")
   inst.components.shadowlevel:SetDefaultLevel(TUNING.AMULET_SHADOW_LEVEL)
