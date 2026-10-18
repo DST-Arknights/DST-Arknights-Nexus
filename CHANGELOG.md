@@ -1,4 +1,16 @@
 # 版本更新记录
+## v2.10.2 (2026-10-18)
+
+- 修复交互式悬浮提示在 keep_on_hover 开启且未指定 attach_to_parent 时鼠标离开后仍显示的问题，并自动挂载到所属屏幕。
+- 改进共享悬浮提示的焦点与切换管理，隐藏时释放焦点，支持 Mon3tr 描述卡与按键设置交互。
+- 调整技能快捷键底部留白、Nexus 品牌展示与技能界面对比度。
+- Supply Charger 启动扫描改为错峰执行。
+---
+- Fixed interactive hover tooltips remaining visible after the mouse leaves when keep_on_hover is enabled without attach_to_parent, and they now attach to the correct screen automatically.
+- Improved shared tooltip focus and switching, releasing focus when hidden, with support for the Mon3tr description card and keybind settings interaction.
+- Adjusted skill hotkey footer padding, Nexus branding, and skill UI contrast.
+- Supply Charger startup scans are now staggered.
+
 ## v2.10.1 (2026-10-08)
 
 - 修复 M3茧甲在满耐久时回档后耐久被清零的问题。
