@@ -122,9 +122,10 @@ function ArkSupplyCharger:_RefreshTask()
     self._task = nil
   end
   if self.enabled then
+    -- 仅随机错开首轮扫描，避免读档时所有充电桩同时充能与弹字。
     self._task = self.inst:DoPeriodicTask(self.scanInterval, function()
       self:ScanAndCharge()
-    end)
+    end, self.scanInterval * (1 + math.random()))
   end
 end
 
