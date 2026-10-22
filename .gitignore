@@ -9,3 +9,4 @@
 /soundSource/**/*.fsb
 /temp
 /.ai.env
+/.*
