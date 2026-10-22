@@ -2,6 +2,9 @@ GLOBAL.setmetatable(env, {
   __index = function(t, k) return GLOBAL.rawget(GLOBAL, k) end
 })
 
+-- Install native crash reporting before other Nexus modules load.
+modimport('modmain/ark_crash_report')
+
 PrefabFiles = { "ark_item", "ark_workshop", 'ark_training_room',
   'ark_portable_supply', 'ark_portable_supply_range', 'ark_supply_charge_number', "area_target_selector", "map_target_selector", "ark_reticules", "sympathetic_pendant", "sympathetic_pendant_light", "ark_buff",
   "armor_construct", 'ark_craft_callback' }
