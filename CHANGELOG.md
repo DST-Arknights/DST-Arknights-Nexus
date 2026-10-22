@@ -1,4 +1,10 @@
 # 版本更新记录
+## v2.12.0 (2026-10-22)
+
+- 新增原生崩溃日志上报：默认开启，遵守游戏数据收集设置，并附带模组版本、运行端、世界及玩家快照；本地开发副本不会上报。
+---
+- Added native crash log reporting: enabled by default, respects the game's data collection settings, and includes mod version, runtime side, world, and player snapshot; local development copies are not reported.
+
 ## v2.11.0 (2026-10-19)
 
 - 完成 Empathy Amulet 的满共振援助能力。

@@ -8,29 +8,23 @@ name = T({
     en = "Arknights: Nexus",
     zh = "源枢"
 })
-version = "2.11.0"
+version = "2.12.0"
 
 -- 版本更新说明（由发布脚本自动维护，请勿手动编辑）
 local UPDATE_EN = [[
+v2.12.0 (2026-10-22)
+- Added native crash log reporting: enabled by default, respects the game's data collection settings, and includes mod version, runtime side, world, and player snapshot; local development copies are not reported.
+---
 v2.11.0 (2026-10-19)
 - Completed the full resonance assistance ability for Empathy Amulet.
----
-v2.10.2 (2026-10-18)
-- Fixed interactive hover tooltips remaining visible after the mouse leaves when keep_on_hover is enabled without attach_to_parent, and they now attach to the correct screen automatically.
-- Improved shared tooltip focus and switching, releasing focus when hidden, with support for the Mon3tr description card and keybind settings interaction.
-- Adjusted skill hotkey footer padding, Nexus branding, and skill UI contrast.
-- Supply Charger startup scans are now staggered.
 ]]
 
 local UPDATE_ZH = [[
+v2.12.0 (2026-10-22)
+- 新增原生崩溃日志上报：默认开启，遵守游戏数据收集设置，并附带模组版本、运行端、世界及玩家快照；本地开发副本不会上报。
+---
 v2.11.0 (2026-10-19)
 - 完成 Empathy Amulet 的满共振援助能力。
----
-v2.10.2 (2026-10-18)
-- 修复交互式悬浮提示在 keep_on_hover 开启且未指定 attach_to_parent 时鼠标离开后仍显示的问题，并自动挂载到所属屏幕。
-- 改进共享悬浮提示的焦点与切换管理，隐藏时释放焦点，支持 Mon3tr 描述卡与按键设置交互。
-- 调整技能快捷键底部留白、Nexus 品牌展示与技能界面对比度。
-- Supply Charger 启动扫描改为错峰执行。
 ]]
 
 description = T({
