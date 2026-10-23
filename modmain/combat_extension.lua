@@ -122,36 +122,38 @@ AddComponentPostInit("combat", function(self)
     self.truedamagemultipliers:RemoveModifier("ark_true_damage")
   end
 
-  -- hook
-  ArkHookFunction(self, "GetAttacked", function(next, self, attacker, damage, weapon, stimuli, spdamage)
-    -- 作为被攻击者, 如果攻击者启用了真实伤害，则将伤害转换为真实伤害
-    local tdprop = attacker and attacker.components.combat and attacker.components.combat.truedamagemultipliers:Get() or 0
-    if tdprop > 0 then
-      if spdamage == nil then
-        spdamage = {}
-      end
-      local true_damage = 0
-      damage = math.max(damage or 0, 0)
-      true_damage = damage * tdprop
-      damage = math.max(damage - true_damage, 0)
-      local removed_spdamage = {}
-      for k, v in pairs(spdamage) do
-        if k ~= "true_damage" then
-            local true_amount = v * tdprop
-            spdamage[k] = v - true_amount
-            if spdamage[k] <= 0 then
-                removed_spdamage[k] = true
-            end
-            true_damage = true_damage + true_amount
+  -- 自定义固定伤害也可显式调用；输入必须是尚未转换的伤害对。
+  function self:ConvertToTrueDamage(damage, spdamage)
+    local proportion = math.min(self.truedamagemultipliers:Get(), 1)
+    if proportion <= 0 then
+      return damage, spdamage
+    end
+
+    damage = math.max(damage or 0, 0)
+    local true_damage = damage * proportion
+    local converted = {}
+    -- 原版会继续修改特殊伤害表，不能原地改写调用方持有的表。
+    for kind, amount in pairs(spdamage or {}) do
+      if kind == "true_damage" then
+        converted[kind] = amount
+      else
+        true_damage = true_damage + amount * proportion
+        local remaining = amount * (1 - proportion)
+        if remaining > 0 then
+          converted[kind] = remaining
         end
       end
-      for k in pairs(removed_spdamage) do
-        spdamage[k] = nil
-      end
-      spdamage.true_damage = (spdamage.true_damage or 0) + true_damage
-      ArkLogger:Debug("true_damage", true_damage, damage)
     end
-    return next(self, attacker, damage, weapon, stimuli, spdamage)
+    if true_damage > 0 then
+      converted.true_damage = (converted.true_damage or 0) + true_damage
+    end
+    return damage * (1 - proportion), next(converted) ~= nil and converted or nil
+  end
+
+  -- 在攻击方使用原版计算结果，受击、护甲、事件及击杀仍由原版结算。
+  ArkHookFunction(self, "CalcDamage", function(next, self, ...)
+    local damage, spdamage = next(self, ...)
+    return self:ConvertToTrueDamage(damage, spdamage)
   end)
 end)
 

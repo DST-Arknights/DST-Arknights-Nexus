@@ -81,12 +81,12 @@ combat.attackspeedmodifiers 是攻速修改器容器，封装接口为：
 
 ### 真实伤害
 
-它也存在一个乘法修改器, truedamagemultipliers. 使用它优于使用下面的接口.
+`combat.truedamagemultipliers` 管理多来源转换比例，默认值为 0；按剩余非真伤合并，两个 50% 来源合计转换 75%。它不同于 `weapon.truedamagemultipliers`，后者是武器固有真伤的乘法修改器。
 
 combat:EnableTrueDamage(value) 用于启用真实伤害转换，value 取 0 到 1。
 combat:DisableTrueDamage() 用于移除该效果。
 
-它的语义不是“额外附加固定真伤”，而是“把原伤害中的一部分按比例转换为 true_damage 类型”，并在 GetAttacked 流程中重写 damage 与 spdamage。
+它把普通伤害与非真伤特殊伤害按比例转换为 `true_damage`，保留已有真伤。转换发生在攻击方原版 `CalcDamage` 返回后，特殊伤害仍走原版结算。
 
 推荐写法：
 
@@ -94,6 +94,27 @@ combat:DisableTrueDamage() 用于移除该效果。
 inst.components.combat:EnableTrueDamage(0.35)
 inst.components.combat:DisableTrueDamage()
 ```
+
+多技能或 Buff 并存时使用独立来源，效果结束只移除自己的来源：
+
+```lua
+local combat = inst.components.combat
+combat.truedamagemultipliers:SetModifier("my_skill", 0.5)
+combat.truedamagemultipliers:RemoveModifier("my_skill")
+```
+
+`DisableTrueDamage()` 仅移除 `EnableTrueDamage()` 写入的默认来源。
+
+绕开 `CalcDamage` 的固定伤害入口需要显式调用公共方法，再把结果交给正常战斗结算：
+
+```lua
+local damage, spdamage = inst.components.combat:ConvertToTrueDamage(120)
+target.components.combat:GetAttacked(inst, damage, nil, nil, spdamage)
+```
+
+不要对 `CalcDamage` 的结果再次调用此方法，部分比例会重复转换。直接调用 `GetAttacked` 不再隐式转换；已有武器真伤和显式 `spdamage.true_damage` 无需调用转换方法。
+
+原版 `DoAttack` 的 `instancemult` 在 `CalcDamage` 后仅缩放普通伤害，提前转换的部分不会再乘它；自定义攻击若需整体倍率，应明确同时缩放普通和特殊伤害。真伤仍受装备类型抗性、生命层减伤、无敌和单击上限等原版规则影响。
 
 ## Health 修改器
 
