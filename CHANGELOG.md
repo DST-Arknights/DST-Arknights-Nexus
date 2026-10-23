@@ -1,4 +1,12 @@
 # 版本更新记录
+## v2.12.1 (2026-10-24)
+
+- 修复角色比例 true damage 转换在普通攻击和范围攻击中可能失效的问题。
+- 新增固定伤害转换支持，并保留比例开关、多来源叠加和武器固有 true damage。
+---
+- Fixed an issue where character proportional true damage conversion could fail on normal and area attacks.
+- Added fixed damage conversion support while retaining the proportional toggle, multi-source stacking, and weapon innate true damage.
+
 ## v2.12.0 (2026-10-22)
 
 - 新增原生崩溃日志上报：默认开启，遵守游戏数据收集设置，并附带模组版本、运行端、世界及玩家快照；本地开发副本不会上报。
