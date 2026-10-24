@@ -162,11 +162,9 @@ local function SafeRefresh()
   pcall(RefreshSnapshot)
 end
 
-local function IsEnabled()
-  return SafeMethod(TheSim, "GetDataCollectionSetting") == true
-    -- Launch-time restrictions (including -offline) are separate from the
-    -- saved privacy preference checked above. Honor both native gates.
-    and SafeMethod(TheSim, "IsDataCollectionDisabled") == false
+local function ReportStatus(status)
+  -- Fixed status messages only; never include URLs, identities or raw errors.
+  pcall(print, "[NexusCrashReport] " .. status)
 end
 
 local function OnErrorWidget(_, title)
@@ -175,29 +173,44 @@ local function OnErrorWidget(_, title)
   if mainscreen and title == mainscreen.BAD_HASHES_TITLE then
     return
   end
-  if state.attempted or not IsEnabled() or state.url == nil
-    or TheSim == nil or type(TheSim.SendCrashReportTo) ~= "function" then
+  if state.attempted then
+    return
+  end
+  if state.url == nil then
+    ReportStatus("skipped_no_snapshot")
+    return
+  end
+  if TheSim == nil or type(TheSim.SendCrashReportTo) ~= "function" then
+    ReportStatus("skipped_native_unavailable")
     return
   end
   state.attempted = true
   -- The native API itself checks for a LOCAL native crash before reading a log.
   -- A remote server's disconnection dialog cannot turn this client into a crash.
   -- No scheduling, retries, file writes or UI changes in the failure path.
-  pcall(function()
+  -- Let the native API apply its own restrictions instead of adding Lua gates.
+  ReportStatus("calling_native")
+  local ok = pcall(function()
     TheSim:SendCrashReportTo(state.url, function(_, success, status)
       -- Never print URLs, player identities, response bodies or raw logs.
       local accepted = success == true and type(status) == "number"
         and status >= 200 and status < 300
-      pcall(print, "[NexusCrashReport] " .. (accepted and "accepted" or "not_accepted"))
+      ReportStatus(accepted and "accepted" or "not_accepted")
     end, REPORT_NETWORK_WAIT_SECONDS)
   end)
+  -- Returning from the native call does not establish HTTP delivery.
+  ReportStatus(ok and "native_call_returned" or "native_call_failed")
 end
 
 SafeRefresh()
 AddClassPostConstruct("widgets/scripterrorwidget", function(...)
   -- The original constructor has already completed. Never hide its error screen.
-  pcall(OnErrorWidget, ...)
+  local ok = pcall(OnErrorWidget, ...)
+  if not ok then
+    ReportStatus("error_handler_failed")
+  end
 end)
+ReportStatus("installed")
 
 AddPrefabPostInit("world", function(world)
   SafeRefresh()
