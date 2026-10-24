@@ -1,4 +1,10 @@
 # 版本更新记录
+## v2.12.2 (2026-10-25)
+
+- 崩溃上报不再受 Lua 门控影响，并会附带更多诊断信息。
+---
+- Crash reporting is no longer affected by Lua gating and now includes more diagnostic information.
+
 ## v2.12.1 (2026-10-24)
 
 - 修复角色比例 true damage 转换在普通攻击和范围攻击中可能失效的问题。

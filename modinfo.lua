@@ -8,25 +8,25 @@ name = T({
     en = "Arknights: Nexus",
     zh = "源枢"
 })
-version = "2.12.1"
+version = "2.12.2"
 
 -- 版本更新说明（由发布脚本自动维护，请勿手动编辑）
 local UPDATE_EN = [[
+v2.12.2 (2026-10-25)
+- Crash reporting is no longer affected by Lua gating and now includes more diagnostic information.
+---
 v2.12.1 (2026-10-24)
 - Fixed an issue where character proportional true damage conversion could fail on normal and area attacks.
 - Added fixed damage conversion support while retaining the proportional toggle, multi-source stacking, and weapon innate true damage.
----
-v2.12.0 (2026-10-22)
-- Added native crash log reporting: enabled by default, respects the game's data collection settings, and includes mod version, runtime side, world, and player snapshot; local development copies are not reported.
 ]]
 
 local UPDATE_ZH = [[
+v2.12.2 (2026-10-25)
+- 崩溃上报不再受 Lua 门控影响，并会附带更多诊断信息。
+---
 v2.12.1 (2026-10-24)
 - 修复角色比例 true damage 转换在普通攻击和范围攻击中可能失效的问题。
 - 新增固定伤害转换支持，并保留比例开关、多来源叠加和武器固有 true damage。
----
-v2.12.0 (2026-10-22)
-- 新增原生崩溃日志上报：默认开启，遵守游戏数据收集设置，并附带模组版本、运行端、世界及玩家快照；本地开发副本不会上报。
 ]]
 
 description = T({
