@@ -10,6 +10,7 @@
 -- 写入时通过 inst.replica.ark_flyer.net_xxx:set() 完成同步。
 -------------------------------------------------------------------
 
+local MODES = require("ark_flyer_modes")
 local FLY_HEIGHT = 0.5       -- 最高飞行高度
 local FLY_SPEED   = 10     -- 飞行移动速度
 local RISE_RATE   = 1.4    -- 起飞快照每秒 percent 增量
@@ -52,7 +53,7 @@ end
 
 local function RestoreFlyingColliders(inst)
     local flyer = inst.components.ark_flyer
-    if flyer ~= nil and flyer.flying and flyer._target > 0
+    if flyer ~= nil and flyer:IsAirborne() and flyer._target > 0
         and not inst:HasTag("playerghost")
         and not (inst.components.health and inst.components.health:IsDead()) then
         RemovePhysicsColliders(inst)
@@ -71,7 +72,6 @@ end
 
 local ArkFlyer = Class(function(self, inst)
     self.inst    = inst
-    self.flying  = false
     self.speed   = FLY_SPEED
     self.height  = 0
     self._target = 0
@@ -95,6 +95,33 @@ function ArkFlyer:SetPercent(v)
     if r then r.net_percent:set(v) end
 end
 
+function ArkFlyer:GetMode()
+    local r = GetReplica(self.inst)
+    return r ~= nil and r:GetMode() or MODES.GROUND
+end
+
+function ArkFlyer:IsFlying()
+    return self:GetMode() == MODES.FLYING
+end
+
+function ArkFlyer:IsHovering()
+    return self:GetMode() == MODES.HOVERING
+end
+
+function ArkFlyer:IsAirborne()
+    return self:GetMode() ~= MODES.GROUND
+end
+
+-- 跳跃等状态临时接管马达时，只暂停高度驱动，保留飞行物理和开关。
+-- 这是瞬时动作状态，不写入存档。
+function ArkFlyer:SetHeightSuspended(suspended)
+    local r = GetReplica(self.inst)
+    if r then r.net_height_suspended:set(suspended == true) end
+    if not suspended and self:IsAirborne() then
+        self:DriveHeight()
+    end
+end
+
 function ArkFlyer:GetFlyTargetHeight()
     self.height = FLY_HEIGHT * self:GetPercent()
     return self.height
@@ -104,14 +131,15 @@ end
 -- 移动会重新设置 SetMotorVel 覆盖垂直分量，故 locomotor.RunForward 后需再次调用。
 function ArkFlyer:DriveHeight()
     local inst = self.inst
-    if not inst.Physics then return end
+    local r = GetReplica(inst)
+    if not inst.Physics or (r and r:IsHeightSuspended()) then return end
     local vx, vy, vz = inst.Physics:GetMotorVel()
     local _, y = inst.Transform:GetWorldPosition()
     inst.Physics:SetMotorVel(vx, (self:GetFlyTargetHeight() - y) * MOTOR_K, vz)
 end
 
 function ArkFlyer:OnUpdate(dt)
-    if not self.flying then
+    if not self:IsAirborne() then
         self.inst:StopUpdatingComponent(self)
         return
     end
@@ -126,7 +154,7 @@ function ArkFlyer:OnUpdate(dt)
 
     self:DriveHeight()
 
-    -- 降落完成：高度归零后关闭飞行状态（net_flying 同步 false）
+    -- 降落完成才切回地面模式，保留原有等待 IsFlying() 结束的时序。
     if self._target <= 0 and self:GetFlyTargetHeight() <= 0 then
         self:FinishLand()
     end
@@ -134,9 +162,16 @@ end
 
 ------------------------------------------------------------------------
 
-function ArkFlyer:TakeOff()
-    if self.flying then return end
-    self.flying  = true
+function ArkFlyer:SetMode(mode)
+    if mode == MODES.GROUND then
+        self:Land()
+        return
+    elseif mode ~= MODES.FLYING and mode ~= MODES.HOVERING then
+        return
+    end
+
+    local oldmode = self:GetMode()
+    if oldmode == mode and self._target > 0 then return end
     self._target = 1
 
     local inst = self.inst
@@ -157,15 +192,23 @@ function ArkFlyer:TakeOff()
     --     inst.DynamicShadow:Enable(false)
     -- end
 
-    -- 先同步飞行状态再播事件，客户端 hook 立即判定飞行
-    self:SetNetFlying(true)
+    -- mode 是唯一模式来源；两种空中模式共用物理与高度。
+    local r = GetReplica(inst)
+    if r then r.net_mode:set(mode) end
     inst:StartUpdatingComponent(self)
+    if oldmode ~= mode then
+        inst:PushEvent("ark_flyer_modechanged", { oldmode = oldmode, mode = mode })
+    end
     inst:PushEvent("ark_takeoff")
+end
+
+function ArkFlyer:TakeOff()
+    self:SetMode(MODES.FLYING)
 end
 
 -- 降落：恢复地面物理，高度由 OnUpdate 渐降到 0 后关闭飞行
 function ArkFlyer:Land()
-    if not self.flying then return end
+    if not self:IsAirborne() or self._target <= 0 then return end
     self._target = 0
 
     local inst = self.inst
@@ -188,35 +231,28 @@ function ArkFlyer:Land()
 end
 
 function ArkFlyer:FinishLand()
-    self.flying = false
-    self:SetNetFlying(false)
-    -- 落地事件：hook 播放降落退出动画
+    local oldmode = self:GetMode()
+    local r = GetReplica(self.inst)
+    if r then r.net_mode:set(MODES.GROUND) end
+    self.inst:PushEvent("ark_flyer_modechanged", { oldmode = oldmode, mode = MODES.GROUND })
     self.inst:PushEvent("ark_land")
 end
 
-function ArkFlyer:SetNetFlying(v)
-    local r = GetReplica(self.inst)
-    if r then r.net_flying:set(v) end
-end
-
-function ArkFlyer:IsFlying()
-    return self.flying
-end
-
 function ArkFlyer:Toggle()
-    if self.flying then self:Land() else self:TakeOff() end
+    if self:IsAirborne() then self:Land() else self:TakeOff() end
 end
 
 ------------------------------------------------------------------------
 -- 持久化
 
 function ArkFlyer:OnSave()
-    return { flying = self.flying }
+    return { mode = self:GetMode() }
 end
 
 function ArkFlyer:OnLoad(data)
-    if data and data.flying then
-        self:TakeOff()
+    local mode = data ~= nil and (data.mode or (data.flying and MODES.FLYING)) or nil
+    if mode == MODES.FLYING or mode == MODES.HOVERING then
+        self:SetMode(mode)
         -- 读档直接满高度
         self._target = 1
         self:SetPercent(1)
