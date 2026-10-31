@@ -1,4 +1,14 @@
 # 版本更新记录
+## v2.12.3 (2026-11-01)
+
+- 新增悬浮模式，并改进地面、飞行与近地悬浮之间的切换。
+- 修复近地悬浮时无法保持地面高度的问题。
+- 部分动作可临时接管角色高度，动作结束后平滑恢复。
+---
+- Added a hover mode and improved switching between ground, flight, and near-ground hover.
+- Fixed near-ground hover failing to maintain ground height.
+- Some actions can temporarily take over the character's height, then smoothly restore it when they end.
+
 ## v2.12.2 (2026-10-25)
 
 - 崩溃上报不再受 Lua 门控影响，并会附带更多诊断信息。

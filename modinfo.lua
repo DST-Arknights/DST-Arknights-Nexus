@@ -8,25 +8,27 @@ name = T({
     en = "Arknights: Nexus",
     zh = "源枢"
 })
-version = "2.12.2"
+version = "2.12.3"
 
 -- 版本更新说明（由发布脚本自动维护，请勿手动编辑）
 local UPDATE_EN = [[
+v2.12.3 (2026-11-01)
+- Added a hover mode and improved switching between ground, flight, and near-ground hover.
+- Fixed near-ground hover failing to maintain ground height.
+- Some actions can temporarily take over the character's height, then smoothly restore it when they end.
+---
 v2.12.2 (2026-10-25)
 - Crash reporting is no longer affected by Lua gating and now includes more diagnostic information.
----
-v2.12.1 (2026-10-24)
-- Fixed an issue where character proportional true damage conversion could fail on normal and area attacks.
-- Added fixed damage conversion support while retaining the proportional toggle, multi-source stacking, and weapon innate true damage.
 ]]
 
 local UPDATE_ZH = [[
+v2.12.3 (2026-11-01)
+- 新增悬浮模式，并改进地面、飞行与近地悬浮之间的切换。
+- 修复近地悬浮时无法保持地面高度的问题。
+- 部分动作可临时接管角色高度，动作结束后平滑恢复。
+---
 v2.12.2 (2026-10-25)
 - 崩溃上报不再受 Lua 门控影响，并会附带更多诊断信息。
----
-v2.12.1 (2026-10-24)
-- 修复角色比例 true damage 转换在普通攻击和范围攻击中可能失效的问题。
-- 新增固定伤害转换支持，并保留比例开关、多来源叠加和武器固有 true damage。
 ]]
 
 description = T({
