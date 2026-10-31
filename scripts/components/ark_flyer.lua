@@ -3,7 +3,7 @@
 --
 -- 参考伊蕾娜模组 (elenaflyer) 的实现思路：
 --   - 用物理马达速度 SetMotorVel 控制垂直高度，而非直接改 y 坐标
---   - 目标高度 = FLY_HEIGHT * percent，percent 为 0~1 的 net_float
+--   - 飞行目标高度 = FLY_HEIGHT * percent，近地悬浮目标高度为 0
 --   - 每帧把垂直马达速度设为 (目标高度 - 当前y) * MOTOR_K，平滑趋近
 --
 -- 网络变量装在 replica（inst.replica.ark_flyer）上，本组件不重复定义，
@@ -123,7 +123,7 @@ function ArkFlyer:SetHeightSuspended(suspended)
 end
 
 function ArkFlyer:GetFlyTargetHeight()
-    self.height = FLY_HEIGHT * self:GetPercent()
+    self.height = self:IsHovering() and 0 or FLY_HEIGHT * self:GetPercent()
     return self.height
 end
 
@@ -155,7 +155,7 @@ function ArkFlyer:OnUpdate(dt)
     self:DriveHeight()
 
     -- 降落完成才切回地面模式，保留原有等待 IsFlying() 结束的时序。
-    if self._target <= 0 and self:GetFlyTargetHeight() <= 0 then
+    if self._target <= 0 and self:GetPercent() <= 0 then
         self:FinishLand()
     end
 end
@@ -192,7 +192,7 @@ function ArkFlyer:SetMode(mode)
     --     inst.DynamicShadow:Enable(false)
     -- end
 
-    -- mode 是唯一模式来源；两种空中模式共用物理与高度。
+    -- mode 是唯一模式来源；两种空中模式共用物理，近地悬浮保持地面高度。
     local r = GetReplica(inst)
     if r then r.net_mode:set(mode) end
     inst:StartUpdatingComponent(self)
@@ -206,7 +206,7 @@ function ArkFlyer:TakeOff()
     self:SetMode(MODES.FLYING)
 end
 
--- 降落：恢复地面物理，高度由 OnUpdate 渐降到 0 后关闭飞行
+-- 降落：恢复地面物理，percent 由 OnUpdate 渐降到 0 后关闭飞行
 function ArkFlyer:Land()
     if not self:IsAirborne() or self._target <= 0 then return end
     self._target = 0
@@ -253,7 +253,7 @@ function ArkFlyer:OnLoad(data)
     local mode = data ~= nil and (data.mode or (data.flying and MODES.FLYING)) or nil
     if mode == MODES.FLYING or mode == MODES.HOVERING then
         self:SetMode(mode)
-        -- 读档直接满高度
+        -- 读档直接恢复满 percent，高度由当前模式决定
         self._target = 1
         self:SetPercent(1)
         self:DriveHeight()

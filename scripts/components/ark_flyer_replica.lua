@@ -59,7 +59,7 @@ local ArkFlyerReplica = Class(function(self, inst)
     self.physics_flying = false
     self._lastmode = MODES.GROUND
 
-    -- 0 地面、1 飞行、2 近地悬浮；高度仍由 net_percent 驱动。
+    -- 0 地面、1 飞行、2 近地悬浮；飞行高度由 net_percent 驱动，近地悬浮高度为 0。
     self.net_mode = net_tinybyte(inst.GUID, "ark_flyer_mode", "ark_flyer_mode_dirty")
     self.net_percent = net_float(inst.GUID, "ark_flyer_percent", "ark_flyer_percent_dirty")
     self.net_height_suspended = net_bool(inst.GUID, "ark_flyer_height_suspended", "ark_flyer_height_suspended_dirty")
@@ -104,7 +104,8 @@ function ArkFlyerReplica:DriveHeight()
 
     local vx, _, vz = inst.Physics:GetMotorVel()
     local _, y = inst.Transform:GetWorldPosition()
-    inst.Physics:SetMotorVel(vx, (FLY_HEIGHT * self:GetPercent() - y) * MOTOR_K, vz)
+    local height = self:IsHovering() and 0 or FLY_HEIGHT * self:GetPercent()
+    inst.Physics:SetMotorVel(vx, (height - y) * MOTOR_K, vz)
 end
 
 function ArkFlyerReplica:ApplyFlyingPhysics()
