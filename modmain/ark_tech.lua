@@ -30,12 +30,12 @@ AddPrototyperDef('ark_workshop', {
 
 RegisterInventoryItemAtlas("images/ark_workshop.xml", "ark_workshop.tex")
 -- 制造站
-AddRecipe2('ark_workshop', {
-  Ingredient('charcoal', 10),
-}, TECH.SCIENCE_TWO, {
-  placer = 'ark_workshop_placer',
-  force_hint = true,
-}, { "MODS", "PROTOTYPERS", "STRUCTURES" })
+-- AddRecipe2('ark_workshop', {
+--   Ingredient('charcoal', 10),
+-- }, TECH.SCIENCE_TWO, {
+--   placer = 'ark_workshop_placer',
+--   force_hint = true,
+-- }, { "MODS", "PROTOTYPERS", "STRUCTURES" })
 
 -- 训练室
 AddPrototyperDef('ark_training_room', {
@@ -48,15 +48,15 @@ AddPrototyperDef('ark_training_room', {
 
 RegisterInventoryItemAtlas("images/ark_training_room.xml", "ark_training_room.tex")
 
-AddRecipe2("ark_training_room",
-  { Ingredient("boards", 4), Ingredient("goldnugget", 2) },
-  TECH.SCIENCE_TWO,
-  {
-    placer = 'ark_training_room_placer',
-    force_hint = true,
-  },
-  { "MODS", "PROTOTYPERS", "STRUCTURES" }
-)
+-- AddRecipe2("ark_training_room",
+--   { Ingredient("boards", 4), Ingredient("goldnugget", 2) },
+--   TECH.SCIENCE_TWO,
+--   {
+--     placer = 'ark_training_room_placer',
+--     force_hint = true,
+--   },
+--   { "MODS", "PROTOTYPERS", "STRUCTURES" }
+-- )
 
 AddClassPostConstruct("widgets/redux/craftingmenu_widget", function(self)
   ArkHookFunction(self, "OnCraftingMenuOpen", function(next, self, set_focus)
