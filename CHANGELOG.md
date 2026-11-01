@@ -1,4 +1,10 @@
 # 版本更新记录
+## v2.12.4 (2026-11-02)
+
+- 关闭制造站的配方入口，保留已有建筑功能。
+---
+- Disabled the Crafting Station recipe entry while retaining existing building functionality.
+
 ## v2.12.3 (2026-11-01)
 
 - 新增悬浮模式，并改进地面、飞行与近地悬浮之间的切换。
