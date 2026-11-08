@@ -8,27 +8,23 @@ name = T({
     en = "Arknights: Nexus",
     zh = "源枢"
 })
-version = "2.12.4"
+version = "2.12.5"
 
 -- 版本更新说明（由发布脚本自动维护，请勿手动编辑）
 local UPDATE_EN = [[
+v2.12.5 (2026-11-08)
+- Added the λ Command Center and coordinated defense mechanism.
+---
 v2.12.4 (2026-11-02)
 - Disabled the Crafting Station recipe entry while retaining existing building functionality.
----
-v2.12.3 (2026-11-01)
-- Added a hover mode and improved switching between ground, flight, and near-ground hover.
-- Fixed near-ground hover failing to maintain ground height.
-- Some actions can temporarily take over the character's height, then smoothly restore it when they end.
 ]]
 
 local UPDATE_ZH = [[
+v2.12.5 (2026-11-08)
+- 新增 λ 指挥中心与协同防御机制。
+---
 v2.12.4 (2026-11-02)
 - 关闭制造站的配方入口，保留已有建筑功能。
----
-v2.12.3 (2026-11-01)
-- 新增悬浮模式，并改进地面、飞行与近地悬浮之间的切换。
-- 修复近地悬浮时无法保持地面高度的问题。
-- 部分动作可临时接管角色高度，动作结束后平滑恢复。
 ]]
 
 description = T({

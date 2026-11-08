@@ -1,4 +1,10 @@
 # 版本更新记录
+## v2.12.5 (2026-11-08)
+
+- 新增 λ 指挥中心与协同防御机制。
+---
+- Added the λ Command Center and coordinated defense mechanism.
+
 ## v2.12.4 (2026-11-02)
 
 - 关闭制造站的配方入口，保留已有建筑功能。
