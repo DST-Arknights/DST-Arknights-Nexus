@@ -7,7 +7,7 @@ modimport('modmain/ark_crash_report')
 
 PrefabFiles = { "ark_item", "ark_workshop", 'ark_training_room',
   'ark_portable_supply', 'ark_portable_supply_range', 'ark_supply_charge_number', "area_target_selector", "map_target_selector", "ark_reticules", "sympathetic_pendant", "sympathetic_pendant_light", "ark_buff",
-  "armor_construct", 'ark_craft_callback' }
+  "armor_construct", 'ark_craft_callback', 'ark_lambda_command_center', 'ark_lambda_fx' }
 
 Assets = {
   Asset("SHADER", "shaders/border_radius.ksh"),
@@ -16,6 +16,7 @@ Assets = {
   Asset("ATLAS", "images/ark_crafting_menu_icons.xml"),
   Asset("ATLAS", "images/ark_skill.xml"),
   Asset("ATLAS", "images/ark_training_room.xml"),
+  Asset("ATLAS", "images/inventoryimages/ark_lambda_command_center.xml"),
   Asset("ATLAS", "images/ark_training_room_prototyper.xml"),
   Asset("ATLAS", "images/map_icons/ark_training_room.xml"),
   Asset("ATLAS", "images/emoticon_btn.xml"),
@@ -26,6 +27,8 @@ Assets = {
   Asset("ANIM", "anim/ark_reticules.zip"),
   Asset("SOUNDPACKAGE", "sound/ark_item.fev"),
   Asset("FILE", "sound/ark_item.fsb"),
+  Asset("SOUNDPACKAGE", "sound/ark_lambda.fev"),
+  Asset("FILE", "sound/ark_lambda.fsb"),
 }
 
 AddReplicableComponent("ark_skill")
@@ -192,3 +195,5 @@ DefineNetState("ark_buff_icon", {
 })
 -- 声明前置模块已安装
 GLOBAL.ARK_ITEM_PACKAGE_LOADED = true
+
+modimport('modmain/ark_lambda_command_center')

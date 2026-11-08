@@ -1,4 +1,4 @@
-Arknights: Nexus adds Arknights-themed equipment, Elite progression, and chat emoticons, and provides a shared framework for the character mods.
+Arknights: Nexus adds Arknights-themed equipment, defensive structures, Elite progression, and chat emoticons, and provides a shared framework for the character mods.
 
 For a fuller character experience, consider subscribing to one of the character mods below alongside this mod.
 
@@ -61,6 +61,24 @@ A portable station for recharging skills. Deploy it to quickly charge compatible
 Fuel is consumed only when it actually charges skills. Refuel it as needed, or recover it with a hammer and take it with you, keeping any fuel that remains. Can be crafted by supported Arknights characters.
 
 [url=https://gitee.com/dst-arknights/dst-arknights-item-package/blob/main/docs/%E7%8E%A9%E5%AE%B6%E6%B8%B8%E7%8E%A9%E6%8C%87%E5%8D%97/%E8%A3%85%E5%A4%87%E8%AF%B4%E6%98%8E.md]Read the detailed equipment guide (Chinese)[/url]
+
+[hr][/hr]
+
+[h2]Defensive Structures[/h2]
+
+[h3]Lambda Command Center[/h3]
+
+Keeps watch over your camp. Billed separately.
+
+Learn its recipe at a Shadow Manipulator. Once deployed, it keeps watch automatically, assists nearby players in combat, and supports players, followers, and friendly defenses under threat. Peaceful neutral creatures can pass by undisturbed.
+
+[b]Warming Up[/b]
+Starts with one target and locks onto more enemies as it keeps attacking, up to seven at once. Repeated hits gradually slow an enemy, reaching 50% after about eight seconds of continuous fire from one center. Each layer expires independently, letting movement speed recover in steps.
+
+[b]Share the Watch, Share the Bill[/b]
+Each volley costs LMD equal to its attack power, with a base cost of 10. One payment covers every target in that volley. Living players within twice its attack radius share the cost, and players with funds cover any shortfall. It pauses firing when their combined balance is insufficient and resumes automatically once enough funds are available.
+
+The ground ring is pale blue while on watch, red in combat, and yellow when funds are insufficient. Giants cannot directly demolish it, and you can dismantle it with a hammer.
 
 [hr][/hr]
 

@@ -16,6 +16,22 @@
 
 在新增功能或修复逻辑时，优先复用本仓库已经安装的扩展，不要直接覆写底层组件字段，尤其是战斗、生命、防御相关属性。
 
+## 可露希尔特效缓存与重建
+
+- 五个 `ark_closure_s3_*` 编译包保留在 `anim/`；其中缓速使用原作 `common_slow_01` 片段。本批来自 legacy 120PPU 采样烘焙，源 PNG 保留原文件像素。额外整体 `animation_scale=1`，显示大小在使用处 Lua 调整。用户选定贴图本色与光晕，额外 DST Bloom 已移除。
+- 用户选择将原 PNG、`source.json` 和 IR 保存在 `temp/closure_fx_scale_test/sources/<bank>/`。专用构建脚本与默认配置在 `temp/closure_fx_scale_test/tooling/`，候选、catalog与编译记录在同任务缓存内。该批由共享 `workflow-headless-dst-animation` 直接生成 BILD/ANIM，并调用官方 `TextureConverter.exe` 生成 TEX。`temp/` 按项目发布规则排除。
+- 原四组默认 `playback_speed=2`，源30FPS直接输出60FPS并保留426张源帧，Lua 时间倍率为1。background为120帧/2秒，target的pre/idle/pst为9/171/60帧、0.15/2.85/1秒，hit/cast各33帧/0.55秒；缓速为120帧循环片段。背景、瞄准idle和缓速均为有限采样片段，接缝待实机验收。
+- 默认图集上限8192，每组限1页。各组候选通过二进制、源帧顺序、FPS、挂点与绝对图集映射检查后才替换 `anim/`，旧包留在任务缓存供回退。当前未旋转逐帧 PNG 另检查 `ΔU×atlasW=ΔX`、`-ΔV×atlasH=ΔY`，捕获旧第三页UV夹断问题。
+- 本轮尺寸/颜色实验模块、控制命令和自动试播入口已移除。
+
+## λ指挥中心
+
+- 实体为 `ark_lambda_command_center`，放置预览为 `ark_lambda_command_center_placer`。按用户设定是无health建筑，保留HAMMER拆除和独立攻击组件。workable使用原生SetWorkMultiplierFn只允许player来源扣除拆除工作量，屏蔽巨兽、投射物等非玩家拆毁，玩家仍可按4次基础锤击拆除。配方为1个犀牛角、12块铥矿、6个齿轮、6个电子元件、2颗黄宝石，暗影操控器科技 `TECH.MAGIC_THREE`，按普通原型配方学习后随处制作，在罗德岛科技 `ARK_TECHNOLOGY` 分类显示，按原生配方规则解锁。本体使用 `anim/closure_command_native.zip` 的 Start/Idle/Die，战斗特效集中声明于 `scripts/prefabs/ark_lambda_fx.lua`，均为服务端管理、带 AnimState 的网络实体；瞄准只循环 idle，pre/pst及缓速动画包保留但暂不调用。指挥中心无玩家开关，放置和读档后自动工作，拆除或death事件播放Die后移除。背景和瞄准实体附带淡粉色小光源，半径分别0.8和0.45，强度0.5。命中音效通过PlaySound音量参数按原音量的80%播放。各目标特效以固定尺寸跟随物种命中挂点，缺失时按视觉框半高回退。`scripts/ark_lambda_visuals.lua` 只负责玩家本地的放置与常驻范围圈。
+- 参数集中在 `modmain/ark_lambda_command_center.lua`：半径16、伤害10、攻击周期0.25秒、单塔减速上限50%，每次命中一层、每层8秒独立到期；当前攻速下32层、每层约1.5625%，连续命中约8秒叠满，最后一击8秒后完全恢复。本体和放置预览显示倍率1.5，FX倍率3。启动等待0.5秒，新目标首击等待至少0.15秒；同一目标持续循环瞄准idle。
+- 服务端组件 `ark_lambda_defense` 负责圆形多目标扫描、友军过滤、普通combat伤害入口和短时速度modifier，读档后自动启用。原生组件OnEntitySleep取消扫描并释放目标/背景/交战记录，保留enabled意图；OnEntityWake仅恢复唯一扫描任务并重新启动预热，睡眠读档不建扫描任务，禁用/移除后不会被苏醒重启。空场跳过玩家处理，只有存在空目标槽时才排序候选，补满即停止遍历。判敌沿用原版眼球塔/投石机的当前战斗关系：协助攻击半径2倍内AllPlayers中存活玩家的当前目标，并拦截正在攻击玩家、玩家随从/宠物/驯养单位及友方防御设施的生物；monster/hostile标签不单独触发开火。真实战斗关系保留3秒短期记忆，塔自身持续射击不刷新记忆；死亡、离开范围、变为友军或不可攻击时释放，禁用时清空，记忆不存档。从单目标开始，每攻击9轮增加1个目标，最多7个；有敌人时显示背景，空场5秒后隐藏并重置预热。每座塔的缓速来源独立，多塔遵循locomotor倍率乘算规则；各次命中按顺序独立到期并恢复速度，缓速不显示特效。`ark_lambda_no_stagger` 只拦截本塔受击事件导致的常见 hit/hit_stunlock 状态，不覆盖自定义硬直状态。玩法范围通过实体的 `SetAttackRange` 同步到客户端范围圈。
+- 范围圈为 `anim/ark_lambda_range.zip`，原生外半径150动画单位对应世界半径1，运行时AnimState按实际半径缩放。白色底图的细圆环、四向刻度及8段内短弧，常驻显示；按服务端rangestate染为淡蓝警戒、红色攻击、黄色资源不足，20秒一圈旋转、4秒一轮呼吸，透明度0至0.24。`ark_lambda_defense:SetResourceBlocked(bool)`保留额外资源阻断接口；每轮按当前combat.defaultdamage向上取整消耗龙门币，多目标共用一次扣费。遍历AllPlayers筛选攻击半径2倍内存活且不在limbo的非幽灵玩家，按整币平摊，个人余额不足的缺口由仍有余额的人继续平摊，余数随成功攻击轮数轮换；光环可支付性只统计本轮附近玩家总余额，真正攻击前按最新玩家资格和余额重新分摊，总余额不足或没有可用玩家时整轮不扣不打、显示黄色，背景与瞄准继续。Transform只旋转不缩放、DECOR+NOCLICK、无额外Bloom，自发光为0并遵循环境光照。本地范围环随entitysleep暂停更新并移除、entitywake恢复唯一定时任务，拆除或移除后的Cleanup永久停止。程序化源和离线预览保留在 `temp/lambda_command_center/range/`。
+- 目前背景和瞄准idle沿用有限采样段循环，接缝与新建筑整体表现仍待实机验收。
+
 ## Steam 工坊介绍
 
 中文和英文介绍分别直接编辑 `docs/workshop_description_zh-steam.txt` 和 `docs/workshop_description_en-steam.txt`，使用 Steam BBCode，并同步更新两种语言。
